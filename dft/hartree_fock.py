@@ -41,3 +41,23 @@ class Gaussian(OrbitalFunction):
 
     def __rmul__(self, other):
         return self.__mul__(other)
+
+
+class STO_NG:
+    """Slater Type Orbital
+    Use N Gaussians to approximate Slater function."""
+    def __init__(self, coefficients, exponents):
+        self.coefficients = coefficients
+        self.exponents = exponents
+
+        self.gaussians = [Gaussian(expo, 0, prefactor=coeff)
+                          for expo, coeff in zip(self.exponents, self.coefficients)]
+
+    def __call__(self, x):
+        result = np.zeros(x.shape)
+        for gauss in self.gaussians:
+            result += gauss(x)
+        return result
+
+    def find_coeffs_and_exponents(self, number_of_gaussians):
+        """Find parameters for coefficients and exponents by fitting to a Slater function"""
