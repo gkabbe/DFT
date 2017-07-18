@@ -14,25 +14,37 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class OrbitalFunction:
-    def __init__(self, alpha, center, *, prefactor=1.0):
+    def __init__(self, alpha, center, *, prefactor=1):
         self.alpha = alpha
+        self.center = center
         self.prefactor = prefactor
-        self.center = np.atleast_2d(center)
+        self.normalization_constant = None
+
+    def _distance_func(self, dims, center):
+        raise NotImplementedError
+
+    def __call__(self, *x):
+        x = np.atleast_2d(x)
+        dims = np.meshgrid(*x, sparse=True)
+        center = np.broadcast_to(self.center, len(dims))
+        return self.prefactor * self.normalization_constant * \
+               np.exp(-self.alpha * self._distance_func(dims, center))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __repr__(self):
-        return f"{type(self).__name__}(alpha={self.alpha}, center={self.center}, " \
-               f"prefactor={self.prefactor})"
+        return f"{type(self).__name__}(alpha={self.alpha}, center={self.center}"
 
 
 class Slater(OrbitalFunction):
     """Slater function"""
-    def __call__(self, x):
-        x = x.reshape((-1, self.center.shape[-1]))
-        return self.prefactor * (self.alpha**3 / np.pi)**0.5 * \
-               np.exp(-self.alpha * np.sqrt(np.sum((x - self.center)**2, axis=-1)))
+    def __init__(self, alpha, center, *, prefactor=1):
+        super().__init__(alpha, center, prefactor=prefactor)
+        self.normalization_constant = np.sqrt(alpha**3 / np.pi)
+
+    def _distance_func(self, dims, center):
+        return np.sqrt(np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0))
 
     def __mul__(self, other):
         return type(self)(self.alpha, self.center, prefactor=self.prefactor * other)
@@ -40,10 +52,12 @@ class Slater(OrbitalFunction):
 
 class Gaussian(OrbitalFunction):
     """Gaussian function"""
-    def __call__(self, x):
-        x = x.reshape((-1, self.center.shape[-1]))
-        return self.prefactor * (2 * self.alpha / np.pi)**0.75 * \
-               np.exp(-self.alpha * np.sum((x - self.center)**2, axis=-1))
+    def __init__(self, alpha, center, *, prefactor=1):
+        super().__init__(alpha, center, prefactor=prefactor)
+        self.normalization_constant = (2 * alpha / np.pi)**(3 / 4)
+
+    def _distance_func(self, dims, center):
+        return np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0)
 
     def __mul__(self, other):
         if type(other) is Gaussian:
@@ -53,7 +67,7 @@ class Gaussian(OrbitalFunction):
                         np.exp(-self.alpha * beta / (self.alpha + beta) *
                                np.sum((self.center - other.center)**2, axis=-1))
             new_center = (self.alpha * self.center + beta * other.center) / (self.alpha + beta)
-            return type(self)(new_alpha, new_center, prefactor=prefactor)
+            return type(self)(new_alpha, new_center, prefactor=self.prefactor * prefactor)
         else:
             return type(self)(self.alpha, self.center, prefactor=self.prefactor * other)
 
