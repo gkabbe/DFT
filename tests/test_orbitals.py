@@ -39,3 +39,11 @@ def test_multiplication_w_gaussian():
     numeric_result = y1 * y2
 
     assert np.allclose(y3, numeric_result), "Gaussian product does not match numerical result"
+
+
+def test_slater():
+    x = np.linspace(-3, 3)
+    s1 = hartree_fock.Slater(1, 0)
+
+    plt.plot(x, s1(x))
+    plt.show()
