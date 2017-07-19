@@ -7,6 +7,7 @@ import math
 
 import numpy as np
 from scipy.optimize import minimize
+from scipy.special import erf
 
 
 logger = logging.getLogger(__name__)
@@ -184,8 +185,34 @@ def overlap_integral(g_a: Gaussian, g_b: Gaussian):
            (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_ab**2)
 
 
+def f_0(t):
+    return 0.5 * (np.pi / t)**0.5 * erf(t**0.5)
+
+
 def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaussian):
-    pass
+    alpha = g_a.alpha
+    beta = g_b.alpha
+    gamma = g_c.alpha
+    delta = g_d.alpha
+    r_a = g_a.center
+    r_b = g_b.center
+    r_c = g_c.center
+    r_d = g_d.center
+    r_ab = r_b - r_a
+    r_cd = r_d - r_c
+    r_ab_squared = np.dot(r_ab, r_ab)
+    r_cd_squared = np.dot(r_cd, r_cd)
+    r_p = (alpha * r_a + beta * r_b) / (alpha + beta)
+    r_q = (gamma * r_c + delta * r_d) / (gamma + delta)
+    r_pq = r_q - r_p
+    r_pq_squared = np.dot(r_pq, r_pq)
+
+    result = 2 * np.pi**2.5 / ((alpha + beta) * (gamma + delta) * (alpha + beta + gamma + delta)**0.5) \
+             * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared - gamma * delta / (gamma + delta) * r_cd_squared) \
+             * f_0((alpha + beta) * (gamma + delta) / (alpha + beta + gamma + delta) * r_pq_squared)
+
+    return result
+
 
 
 def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
