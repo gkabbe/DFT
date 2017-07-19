@@ -1,7 +1,7 @@
 import numpy as np
 from dft import hartree_fock
 
-import matplotlib.pyplot as plt
+from pytest import approx
 
 
 def test_evaluation():
@@ -10,6 +10,13 @@ def test_evaluation():
     gaussian = hartree_fock.Gaussian(1, 0)
 
     y = gaussian(x)
+
+
+def test_gaussian_normalization():
+    gaussian = hartree_fock.Gaussian(1, 0)
+    x = np.linspace(-3, 3)
+    y = gaussian(x)
+    dx = x[1] - x[0]
 
 
 def test_gaussian_multiplication_w_number():
@@ -60,6 +67,31 @@ def test_slater():
                                err_msg="Multiplication of Slater with number failed")
 
 
-def test_sto_ng():
-    sto_ng = hartree_fock.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
-    sto_ng.find_coeffs_and_exponents()
+# These three tests are not suited for unit testing (too long), but results are ok
+#
+# def test_sto_1g():
+#     sto_ng = hartree_fock.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
+#     coeff, expo = sto_ng.find_coeffs_and_exponents()
+#
+#     # Assert equal result as Szabo/Ostlund (p. 157)
+#     assert expo[0] == approx(0.270950), "Result deviates from Szabo/Ostlund's result"
+#
+#
+# def test_sto_2g():
+#     sto_ng = hartree_fock.STO_NG([0, 0, 0], coefficients=[1, 1], exponents=[1, 1])
+#     coeff, expo = sto_ng.find_coeffs_and_exponents()
+#
+#     # Assert equal result as Szabo/Ostlund (p. 157)
+#     assert all(coeff == approx([0.678914, 0.430129])), "Result deviates from Szabo/Ostlund's result"
+#     assert all(expo == approx([0.151623, 0.851819])), "Result deviates from Szabo/Ostlund's result"
+#
+#
+# def test_sto_3g():
+#     sto_ng = hartree_fock.STO_NG([0, 0, 0], coefficients=[1, 1, 1], exponents=[1, 1, 1])
+#    coeff, expo = sto_ng.find_coeffs_and_exponents()
+#
+#    # Assert equal result as Szabo/Ostlund (p. 157)
+#    assert all(coeff == approx([0.444635, 0.535328, 0.154329])), \
+#        "Result deviates from Szabo/Ostlund's result"
+#    assert all(expo == approx([0.109818, 0.405771, 2.22766])), \
+#        "Result deviates from Szabo/Ostlund's result"
