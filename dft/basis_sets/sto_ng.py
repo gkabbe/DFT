@@ -189,4 +189,12 @@ def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaus
 
 
 def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
-    pass
+    alpha = g_a.alpha
+    beta = g_b.alpha
+    r_a = g_a.center
+    r_b = g_b.center
+    r_ab = r_b - r_a
+    r_squared = np.dot(r_ab, r_ab)
+
+    return alpha * beta / (alpha + beta) * (3 - 2 * alpha * beta / (alpha + beta) * r_squared) * \
+           (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_squared)
