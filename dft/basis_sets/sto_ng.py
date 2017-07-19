@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 class OrbitalFunction:
     def __init__(self, alpha, center, *, prefactor=1, **kwargs):
         self.alpha = alpha
-        self.center = center
+        self.center = np.asfarray(center)
         self.prefactor = prefactor
         self.normalization_constant = None
 
@@ -181,8 +181,9 @@ def overlap_integral(g_a: Gaussian, g_b: Gaussian):
     r_b = g_b.center
     r_ab = np.linalg.norm(r_b - r_a)
 
-    return g_a.normalization_constant * g_b.normalization_constant * \
-           (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_ab**2)
+    return g_a.normalization_constant * g_b.normalization_constant \
+           * g_a.prefactor * g_b.prefactor \
+           * (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_ab**2)
 
 
 def f_0(t):
@@ -212,7 +213,6 @@ def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaus
              * f_0((alpha + beta) * (gamma + delta) / (alpha + beta + gamma + delta) * r_pq_squared)
 
     return result
-
 
 
 def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):

@@ -68,7 +68,7 @@ def test_slater():
 
 
 def test_overlap():
-    gauss1 = sto_ng.Gaussian(1, 0)
+    gauss1 = sto_ng.Gaussian(1, 0, prefactor=0.5)
     gauss2 = sto_ng.Gaussian(1.5, 0)
 
     analytical_result = sto_ng.overlap_integral(gauss1, gauss2)
