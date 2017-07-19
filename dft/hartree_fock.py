@@ -33,8 +33,12 @@ class OrbitalFunction:
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def __mul__(self, other):
+        return type(self)(self.alpha, self.center, prefactor=self.prefactor * other)
+
     def __repr__(self):
-        return f"{type(self).__name__}(alpha={self.alpha}, center={self.center}"
+        return f"{type(self).__name__}(alpha={self.alpha}, center={self.center}, " \
+               f"prefactor={self.prefactor})"
 
 
 class Slater(OrbitalFunction):
@@ -45,9 +49,6 @@ class Slater(OrbitalFunction):
 
     def _distance_func(self, dims, center):
         return np.sqrt(np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0))
-
-    def __mul__(self, other):
-        return type(self)(self.alpha, self.center, prefactor=self.prefactor * other)
 
 
 class Gaussian(OrbitalFunction):
@@ -69,7 +70,7 @@ class Gaussian(OrbitalFunction):
             new_center = (self.alpha * self.center + beta * other.center) / (self.alpha + beta)
             return type(self)(new_alpha, new_center, prefactor=self.prefactor * prefactor)
         else:
-            return type(self)(self.alpha, self.center, prefactor=self.prefactor * other)
+            return super().__mul__(other)
 
 
 class STO_NG:
@@ -83,37 +84,67 @@ class STO_NG:
         self.gaussians = [Gaussian(expo, center, prefactor=coeff)
                           for expo, coeff in zip(self.exponents, self.coefficients)]
 
-    def __call__(self, x):
-        result = np.zeros(x.shape[0])
-        for gauss in self.gaussians:
-            result += gauss(x)
+    def __call__(self, *x):
+        result = self.gaussians[0](*x)
+        for gauss in self.gaussians[1:]:
+            result += gauss(*x)
         return result
 
-    def find_coeffs_and_exponents(self):
+    def find_coeffs_and_exponents(self, gridpoints=300, width=20):
         """Find parameters for coefficients and exponents by fitting to a Slater function"""
-        width = 10
-        x, y, z = [np.linspace(self.center[i] - width / 2, self.center[i] + width / 2, 100)
+        x, y, z = [np.linspace(self.center[i] - width / 2, self.center[i] + width / 2, gridpoints)
                    for i in range(3)]
-
-        X, Y, Z = np.meshgrid(x, y, z)
-        r = np.c_[X.flat, Y.flat, Z.flat]
 
         dV = reduce(mul, (dim[1] - dim[0] for dim in (x, y, z)))
 
         slater = Slater(alpha=1.0, center=self.center)
-        y_target = slater(r)
+        y_target = slater(x, y, z)
 
         def difference(params):
             coefficients = params[: params.size // 2]
             exponents = params[params.size // 2:]
+            logger.debug(f"Coefficients: {coefficients}")
+            logger.debug(f"Exponents: {exponents}")
             sto_ng = type(self)(self.center, coefficients=coefficients, exponents=exponents)
-            diff = np.sum((sto_ng(r) - y_target)**2) * dV
+            diff = np.sum((sto_ng(x, y, z) - y_target)**2) * dV
             logger.debug(f"Difference: {diff}")
-            if math.isnan(diff):
-                import ipdb; ipdb.set_trace()
 
             return diff
 
-        res = minimize(difference, x0=self.coefficients + self.exponents)
-        print(res)
+        if len(self.coefficients) == 1:
+            coeff_bounds = [(1, 1)]
+        else:
+            coeff_bounds = [(0, None) for _ in self.coefficients]
+        expo_bounds = [(0, None) for _ in self.exponents]
+        res = minimize(difference, x0=np.asfarray(self.coefficients + self.exponents),
+                       bounds=coeff_bounds + expo_bounds, method="COBYLA",
+                       options={"maxiter": 10000})
+        logger.info(res)
+        result = res.x
+        coefficients = result[:len(result) // 2]
+        exponents = result[len(result) // 2:]
+        return coefficients, exponents
 
+
+class STO_1G(STO_NG):
+    """Slater Type Orbital fitted with one Gaussian"""
+    def __init__(self, center):
+        coefficients = [1]
+        exponents = [0.270950]
+        super().__init__(center, coefficients=coefficients, exponents=exponents)
+
+
+class STO_2G(STO_NG):
+    """Slater Type Orbital fitted with two Gaussians"""
+    def __init__(self, center):
+        coefficients = [0.678914, 0.430129]
+        exponents = [0.151623, 0.851819]
+        super().__init__(center, coefficients=coefficients, exponents=exponents)
+
+
+class STO_3G(STO_NG):
+    """Slater Type Orbital fitted with three Gaussians"""
+    def __init__(self, center):
+        coefficients = [0.444635, 0.535328, 0.154329]
+        exponents = [0.109818, 0.405771, 2.22766]
+        super().__init__(center, coefficients=coefficients, exponents=exponents)
