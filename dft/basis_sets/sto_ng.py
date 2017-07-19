@@ -53,9 +53,9 @@ class Slater(OrbitalFunction):
 
 class Gaussian(OrbitalFunction):
     """Gaussian function"""
-    def __init__(self, alpha, center, *, prefactor=1, **kwargs):
+    def __init__(self, alpha, center, *, prefactor=1, normalized=True, **kwargs):
         super().__init__(alpha, center, prefactor=prefactor, **kwargs)
-        self.normalization_constant = (2 * alpha / np.pi)**(3 / 4)
+        self.normalization_constant = (2 * alpha / np.pi)**(3 / 4) if normalized else 1
 
     def _distance_func(self, dims, center):
         return np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0)
@@ -105,6 +105,14 @@ class STO_NG:
             result += gauss(*x)
         return result
 
+    def __repr__(self):
+        repr_ = "\n".join(f"{exp:12.8f}   {coeff:12.8f}"
+                          for exp, coeff in zip(self.exponents, self.coefficients))
+        return repr_
+
+    def __str__(self):
+        return self.__repr__()
+
     def find_coeffs_and_exponents(self, gridpoints=300, width=20):
         """Find parameters for coefficients and exponents by fitting to a Slater function"""
         x, y, z = [np.linspace(self.center[i] - width / 2, self.center[i] + width / 2, gridpoints)
@@ -140,23 +148,45 @@ class STO_NG:
 
 class STO_1G(STO_NG):
     """Slater Type Orbital fitted with one Gaussian"""
-    def __init__(self, center, **kwargs):
+    def __init__(self, center, *, slater_exponent=1.0, **kwargs):
         coefficients = [1]
         exponents = [0.270950]
-        super().__init__(center=center, coefficients=coefficients, exponents=exponents, **kwargs)
+        super().__init__(center=center, coefficients=coefficients, exponents=exponents,
+                         slater_exponent=slater_exponent, **kwargs)
 
 
 class STO_2G(STO_NG):
     """Slater Type Orbital fitted with two Gaussians"""
-    def __init__(self, center, **kwargs):
+    def __init__(self, center, *, slater_exponent=1.0, **kwargs):
         coefficients = [0.678914, 0.430129]
         exponents = [0.151623, 0.851819]
-        super().__init__(center=center, coefficients=coefficients, exponents=exponents, **kwargs)
+        super().__init__(center=center, coefficients=coefficients, exponents=exponents,
+                         slater_exponent=slater_exponent, **kwargs)
 
 
 class STO_3G(STO_NG):
     """Slater Type Orbital fitted with three Gaussians"""
-    def __init__(self, center, **kwargs):
+    def __init__(self, center, *, slater_exponent=1.0, **kwargs):
         coefficients = [0.444635, 0.535328, 0.154329]
         exponents = [0.109818, 0.405771, 2.22766]
-        super().__init__(center=center, coefficients=coefficients, exponents=exponents, **kwargs)
+        super().__init__(center=center, coefficients=coefficients, exponents=exponents,
+                         slater_exponent=slater_exponent, **kwargs)
+
+
+def overlap_integral(g_a: Gaussian, g_b: Gaussian):
+    alpha = g_a.alpha
+    beta = g_b.alpha
+    r_a = g_a.center
+    r_b = g_b.center
+    r_ab = np.linalg.norm(r_b - r_a)
+
+    return g_a.normalization_constant * g_b.normalization_constant * \
+           (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_ab**2)
+
+
+def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaussian):
+    pass
+
+
+def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
+    pass
