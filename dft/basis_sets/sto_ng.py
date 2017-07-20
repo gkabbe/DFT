@@ -8,6 +8,7 @@ import math
 import numpy as np
 from scipy.optimize import minimize
 from scipy.special import erf
+from multipledispatch import dispatch
 
 
 logger = logging.getLogger(__name__)
@@ -107,8 +108,10 @@ class STO_NG:
         return result
 
     def __repr__(self):
-        repr_ = "\n".join(f"{exp:12.8f}   {coeff:12.8f}"
-                          for exp, coeff in zip(self.exponents, self.coefficients))
+        center = f"Center: {self.center}"
+        parameters = "\n".join(f"{exp:12.8f}   {coeff:12.8f}"
+                               for exp, coeff in zip(self.exponents, self.coefficients))
+        repr_ = f"{center}\n{parameters}"
         return repr_
 
     def __str__(self):
@@ -174,6 +177,7 @@ class STO_3G(STO_NG):
                          slater_exponent=slater_exponent, **kwargs)
 
 
+@dispatch(Gaussian, Gaussian)
 def overlap_integral(g_a: Gaussian, g_b: Gaussian):
     alpha = g_a.alpha
     beta = g_b.alpha
@@ -184,6 +188,15 @@ def overlap_integral(g_a: Gaussian, g_b: Gaussian):
     return g_a.normalization_constant * g_b.normalization_constant \
            * g_a.prefactor * g_b.prefactor \
            * (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_ab**2)
+
+
+@dispatch(STO_NG, STO_NG)
+def overlap_integral(sto_a, sto_b):
+    result = 0
+    for g_a in sto_a.gaussians:
+        for g_b in sto_b.gaussians:
+            result += overlap_integral(g_a, g_b)
+    return result
 
 
 def f_0(t):
