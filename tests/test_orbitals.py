@@ -127,14 +127,52 @@ def test_two_electron_integral():
     phi1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
     phi2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
 
-    print(sto_ng.two_electron_integral(phi1, phi1, phi2, phi2))
+    p1p1p1p1 = sto_ng.two_electron_integral(phi1, phi1, phi1, phi1)
+    p1p1p2p2 = sto_ng.two_electron_integral(phi1, phi1, phi2, phi2)
+    p2p1p1p1 = sto_ng.two_electron_integral(phi2, phi1, phi1, phi1)
+    p2p1p2p1 = sto_ng.two_electron_integral(phi2, phi1, phi2, phi1)
+
+    assert p1p1p1p1 == approx(0.7746, abs=1e-4)
+    assert p1p1p2p2 == approx(0.5697, abs=1e-4)
+    assert p2p1p1p1 == approx(0.4441, abs=1e-4)
+    assert p2p1p2p1 == approx(0.2970, abs=1e-4)
 
 
 def test_kinetic():
     phi1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
     phi2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+    phis = phi1, phi2
 
-    print(sto_ng.kinetic_energy_integral(phi1, phi2))
+    T = np.zeros((2, 2))
+    T_target = np.array([[0.7600, 0.2365],
+                         [0.2365, 0.7600]])
+
+    for i in range(2):
+        for j in range(2):
+            T[i, j] = sto_ng.kinetic_energy_integral(phis[i], phis[j])
+
+    np.testing.assert_allclose(T, T_target, atol=1e-4)
+
+
+def test_attraction():
+    phi1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
+    phi2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+    phis = phi1, phi2
+
+    nuc1 = np.array([0, 0, 0])
+    Z = 1
+
+    V = np.zeros((2, 2))
+    V_target = np.array([[-1.2266, -0.5974],
+                         [-0.5974, -0.6538]])
+
+    for i in range(2):
+        for j in range(2):
+            V[i, j] = sto_ng.nuclear_attraction(phis[i], phis[j], nuc1, Z)
+
+    np.testing.assert_allclose(V, V_target, atol=1e-4)
+
+
 
 # These three tests are not suited for unit testing (too long), but results are ok
 #
