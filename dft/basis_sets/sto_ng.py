@@ -99,7 +99,7 @@ class STO_NG:
         self.slater_exponent = np.asfarray(slater_exponent)
         self.gaussians = [Gaussian(expo, center, prefactor=coeff, normalized=True)
                           for expo, coeff in zip(self.exponents, self.coefficients)]
-        self.normalization_constant = 1 / overlap_integral(self, self)
+        self.normalization_constant = 1 / np.sqrt(overlap_integral(self, self))
 
     def __call__(self, *x):
         result = self.gaussians[0](*x)
@@ -226,6 +226,9 @@ def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaus
              * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared - gamma * delta / (gamma + delta) * r_cd_squared) \
              * f_0((alpha + beta) * (gamma + delta) / (alpha + beta + gamma + delta) * r_pq_squared)
 
+    result *= g_a.normalization_constant * g_b.normalization_constant * g_c.normalization_constant \
+              * g_d.normalization_constant \
+              * g_a.prefactor * g_b.prefactor * g_c.prefactor * g_d.prefactor
     return result
 
 
@@ -249,8 +252,11 @@ def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
     r_ab = r_b - r_a
     r_squared = np.dot(r_ab, r_ab)
 
-    return alpha * beta / (alpha + beta) * (3 - 2 * alpha * beta / (alpha + beta) * r_squared) * \
-           (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_squared)
+    result = alpha * beta / (alpha + beta) * (3 - 2 * alpha * beta / (alpha + beta) * r_squared) * \
+             (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_squared)
+    result *= g_a.normalization_constant * g_b.normalization_constant \
+              * g_a.prefactor * g_b.prefactor
+    return result
 
 
 @dispatch(STO_NG, STO_NG)
