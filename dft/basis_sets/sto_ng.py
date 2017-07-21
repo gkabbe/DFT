@@ -260,9 +260,11 @@ def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
 
 
 @dispatch(STO_NG, STO_NG)
-def kinetic_energy_integral(sto_a, sto_b):
+def kinetic_energy_integral(sto_a: STO_NG, sto_b: STO_NG):
     result = 0
     for g_a in sto_a.gaussians:
         for g_b in sto_b.gaussians:
-                    result += kinetic_energy_integral(g_a, g_b)
+            result += kinetic_energy_integral(g_a, g_b)
+    return result
+
     return result
