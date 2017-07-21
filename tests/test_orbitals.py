@@ -80,6 +80,29 @@ def test_overlap():
     assert analytical_result == approx(numerical_result)
 
 
+def test_norm_gaussian():
+    gaussian = sto_ng.Gaussian(alpha=0.5, center=[0, 0, 0], normalized=True)
+    x = np.linspace(-5, 5, 100)
+    y = gaussian(x, x, x)**2
+    integral = y.sum() * (x[1] - x[0])**3
+
+    assert integral == approx(1)
+
+    gaussian = sto_ng.Gaussian(prefactor=0.5, alpha=0.5, center=[0, 0, 0], normalized=True)
+    y = gaussian(x, x, x)**2
+    integral = y.sum() * (x[1] - x[0])**3
+
+    assert integral == approx(0.25)
+
+
+def test_norm_sto():
+    sto3g = sto_ng.STO_3G(center=[0, 0, 0])
+    x = np.linspace(-10, 10, 200)
+    y = sto3g(x, x, x)**2
+    integral = y.sum() * (x[1] - x[0])**3
+    assert  integral == approx(1, abs=1e-5)
+
+
 def test_overlap_h2():
     """Calculate the overlap matrix for hydrogen"""
     target_sto1g = np.array([[1.0, 0.6648],

@@ -97,14 +97,15 @@ class STO_NG:
         # (Szabo/Ostlund p.160)
         self.exponents = np.asfarray(exponents) * slater_exponent**2
         self.slater_exponent = np.asfarray(slater_exponent)
-        self.gaussians = [Gaussian(expo, center, prefactor=coeff)
+        self.gaussians = [Gaussian(expo, center, prefactor=coeff, normalized=True)
                           for expo, coeff in zip(self.exponents, self.coefficients)]
+        self.normalization_constant = 1 / overlap_integral(self, self)
 
     def __call__(self, *x):
         result = self.gaussians[0](*x)
         for gauss in self.gaussians[1:]:
             result += gauss(*x)
-        return result
+        return result * self.normalization_constant
 
     def __repr__(self):
         center = f"Center: {self.center}"
