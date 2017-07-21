@@ -79,6 +79,22 @@ def test_overlap():
 
     assert analytical_result == approx(numerical_result)
 
+
+def test_h2():
+    phi_1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
+    phi_2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+
+    overlap_matrix = np.zeros((2, 2))
+    overlap_matrix[0, 0] = sto_ng.overlap_integral(phi_1, phi_1)
+    overlap_matrix[0, 1] = sto_ng.overlap_integral(phi_1, phi_2)
+    overlap_matrix[1, 0] = sto_ng.overlap_integral(phi_2, phi_1)
+    overlap_matrix[1, 1] = sto_ng.overlap_integral(phi_2, phi_2)
+
+    target = np.array([[1.0, 0.6593],
+                       [0.6593, 1.0]])
+
+    assert np.allclose(overlap_matrix, target, rtol=1e-4)
+
 # These three tests are not suited for unit testing (too long), but results are ok
 #
 # def test_sto_1g():
