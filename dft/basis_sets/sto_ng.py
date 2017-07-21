@@ -267,4 +267,26 @@ def kinetic_energy_integral(sto_a: STO_NG, sto_b: STO_NG):
             result += kinetic_energy_integral(g_a, g_b)
     return result
 
+
+@dispatch(Gaussian, Gaussian, object, object)
+def nuclear_attraction(g_a: Gaussian, g_b: Gaussian, r_nucleus, Z):
+    g_c = g_a * g_b
+    alpha, beta = g_a.alpha, g_b.alpha
+    r_ab = g_b.center - g_a.center
+    r_nuc_c = g_c.center - r_nucleus
+    r_ab_squared = np.dot(r_ab, r_ab)
+    r_nuc_c_squared = np.dot(r_nuc_c, r_nuc_c)
+    result =  -2 * np.pi / (alpha + beta) * Z * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared) \
+              * f_0((alpha + beta) * r_nuc_c_squared)
+    result *= g_a.prefactor * g_a.normalization_constant * g_b.prefactor * g_b.normalization_constant
+    return result
+
+
+@dispatch(STO_NG, STO_NG, object, object)
+def nuclear_attraction(sto_a: STO_NG, sto_b: STO_NG, r_nucleus, Z):
+    result = 0
+
+    for g_a in sto_a.gaussians:
+        for g_b in sto_b.gaussians:
+            result += nuclear_attraction(g_a, g_b, r_nucleus, Z)
     return result
