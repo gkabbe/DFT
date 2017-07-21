@@ -80,20 +80,38 @@ def test_overlap():
     assert analytical_result == approx(numerical_result)
 
 
-def test_h2():
-    phi_1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
-    phi_2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+def test_overlap_h2():
+    """Calculate the overlap matrix for hydrogen"""
+    target_sto1g = np.array([[1.0, 0.6648],
+                             [0.6648, 1.0]])
+    target_sto3g = np.array([[1.0, 0.6593],
+                             [0.6593, 1.0]])
 
-    overlap_matrix = np.zeros((2, 2))
-    overlap_matrix[0, 0] = sto_ng.overlap_integral(phi_1, phi_1)
-    overlap_matrix[0, 1] = sto_ng.overlap_integral(phi_1, phi_2)
-    overlap_matrix[1, 0] = sto_ng.overlap_integral(phi_2, phi_1)
-    overlap_matrix[1, 1] = sto_ng.overlap_integral(phi_2, phi_2)
+    for STO, target in zip([sto_ng.STO_1G, sto_ng.STO_3G], [target_sto1g, target_sto3g]):
+        phi_1 = STO(center=[0, 0, 0], slater_exponent=1.24)
+        phi_2 = STO(center=[1.4, 0, 0], slater_exponent=1.24)
 
-    target = np.array([[1.0, 0.6593],
-                       [0.6593, 1.0]])
+        overlap_matrix = np.zeros((2, 2))
+        overlap_matrix[0, 0] = sto_ng.overlap_integral(phi_1, phi_1)
+        overlap_matrix[0, 1] = sto_ng.overlap_integral(phi_1, phi_2)
+        overlap_matrix[1, 0] = sto_ng.overlap_integral(phi_2, phi_1)
+        overlap_matrix[1, 1] = sto_ng.overlap_integral(phi_2, phi_2)
 
-    assert np.allclose(overlap_matrix, target, rtol=1e-4)
+        assert np.allclose(overlap_matrix, target, rtol=1e-4)
+
+
+def test_two_electron_integral():
+    phi1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
+    phi2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+
+    print(sto_ng.two_electron_integral(phi1, phi1, phi2, phi2))
+
+
+def test_kinetic():
+    phi1 = sto_ng.STO_3G(center=[0, 0, 0], slater_exponent=1.24)
+    phi2 = sto_ng.STO_3G(center=[1.4, 0, 0], slater_exponent=1.24)
+
+    print(sto_ng.kinetic_energy_integral(phi1, phi2))
 
 # These three tests are not suited for unit testing (too long), but results are ok
 #
