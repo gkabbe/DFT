@@ -202,6 +202,7 @@ def f_0(t):
     return 0.5 * (np.pi / t)**0.5 * erf(t**0.5)
 
 
+@dispatch(Gaussian, Gaussian, Gaussian, Gaussian)
 def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaussian):
     alpha = g_a.alpha
     beta = g_b.alpha
@@ -227,6 +228,18 @@ def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaus
     return result
 
 
+@dispatch(STO_NG, STO_NG, STO_NG, STO_NG)
+def two_electron_integral(sto_a, sto_b, sto_c, sto_d):
+    result = 0
+    for g_a in sto_a.gaussians:
+        for g_b in sto_b.gaussians:
+            for g_c in sto_c.gaussians:
+                for g_d in sto_d.gaussians:
+                    result += two_electron_integral(g_a, g_b, g_c, g_d)
+    return result
+
+
+@dispatch(Gaussian, Gaussian)
 def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
     alpha = g_a.alpha
     beta = g_b.alpha
@@ -237,3 +250,12 @@ def kinetic_energy_integral(g_a: Gaussian, g_b: Gaussian):
 
     return alpha * beta / (alpha + beta) * (3 - 2 * alpha * beta / (alpha + beta) * r_squared) * \
            (np.pi / (alpha + beta))**1.5 * np.exp(-alpha * beta / (alpha + beta) * r_squared)
+
+
+@dispatch(STO_NG, STO_NG)
+def kinetic_energy_integral(sto_a, sto_b):
+    result = 0
+    for g_a in sto_a.gaussians:
+        for g_b in sto_b.gaussians:
+                    result += kinetic_energy_integral(g_a, g_b)
+    return result
