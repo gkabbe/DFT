@@ -200,7 +200,7 @@ def overlap_integral(sto_a, sto_b):
 
 
 def f_0(t):
-    return 0.5 * (np.pi / t)**0.5 * erf(t**0.5)
+    return 0.5 * (np.pi / t)**0.5 * erf(t**0.5) if t != 0 else 1
 
 
 @dispatch(Gaussian, Gaussian, Gaussian, Gaussian)
