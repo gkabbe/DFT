@@ -222,8 +222,10 @@ def two_electron_integral(g_a: Gaussian, g_b: Gaussian, g_c: Gaussian, g_d: Gaus
     r_pq = r_q - r_p
     r_pq_squared = np.dot(r_pq, r_pq)
 
-    result = 2 * np.pi**2.5 / ((alpha + beta) * (gamma + delta) * (alpha + beta + gamma + delta)**0.5) \
-             * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared - gamma * delta / (gamma + delta) * r_cd_squared) \
+    result = 2 * np.pi**2.5 / ((alpha + beta) * (gamma + delta)
+                               * (alpha + beta + gamma + delta)**0.5) \
+             * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared
+                      - gamma * delta / (gamma + delta) * r_cd_squared) \
              * f_0((alpha + beta) * (gamma + delta) / (alpha + beta + gamma + delta) * r_pq_squared)
 
     result *= g_a.normalization_constant * g_b.normalization_constant * g_c.normalization_constant \
@@ -276,9 +278,11 @@ def nuclear_attraction(g_a: Gaussian, g_b: Gaussian, r_nucleus, Z):
     r_nuc_c = g_c.center - r_nucleus
     r_ab_squared = np.dot(r_ab, r_ab)
     r_nuc_c_squared = np.dot(r_nuc_c, r_nuc_c)
-    result =  -2 * np.pi / (alpha + beta) * Z * np.exp(-alpha * beta / (alpha + beta) * r_ab_squared) \
+    result =  -2 * np.pi / (alpha + beta) * Z * np.exp(-alpha * beta / (alpha + beta)
+                                                       * r_ab_squared) \
               * f_0((alpha + beta) * r_nuc_c_squared)
-    result *= g_a.prefactor * g_a.normalization_constant * g_b.prefactor * g_b.normalization_constant
+    result *= g_a.prefactor * g_a.normalization_constant \
+              * g_b.prefactor * g_b.normalization_constant
     return result
 
 
