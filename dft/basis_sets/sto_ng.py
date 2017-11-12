@@ -24,8 +24,15 @@ class OrbitalFunction:
     def _distance_func(self, dims, center):
         raise NotImplementedError
 
-    def __call__(self, *x):
+    def __call__(self, x):
         x = np.atleast_2d(x)
+        return self.prefactor * self.normalization_constant * \
+               np.exp(-self.alpha * self._distance_func(x, self.center))
+
+    def on_grid(self, *x):
+        """
+        Transform given axes into a grid, and evaluate the orbital on the grid
+        """
         dims = np.meshgrid(*x, sparse=True)
         center = np.broadcast_to(self.center, len(dims))
         return self.prefactor * self.normalization_constant * \
@@ -48,8 +55,8 @@ class Slater(OrbitalFunction):
         super().__init__(alpha, center, prefactor=prefactor, **kwargs)
         self.normalization_constant = np.sqrt(alpha**3 / np.pi)
 
-    def _distance_func(self, dims, center):
-        return np.sqrt(np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0))
+    def _distance_func(self, x, center):
+        return np.sqrt(np.sum((x - center)**2, axis=-1))
 
 
 class Gaussian(OrbitalFunction):
@@ -58,8 +65,8 @@ class Gaussian(OrbitalFunction):
         super().__init__(alpha, center, prefactor=prefactor, **kwargs)
         self.normalization_constant = (2 * alpha / np.pi)**(3 / 4) if normalized else 1
 
-    def _distance_func(self, dims, center):
-        return np.sum([(d - c)**2 for d, c in zip(dims, center)], axis=0)
+    def _distance_func(self, x, center):
+        return np.sum((x - center)**2, axis=-1)
 
     def __mul__(self, other):
         if type(other) is Gaussian:
@@ -101,10 +108,10 @@ class STO_NG:
                           for expo, coeff in zip(self.exponents, self.coefficients)]
         self.normalization_constant = 1 / np.sqrt(overlap_integral(self, self))
 
-    def __call__(self, *x):
-        result = self.gaussians[0](*x)
+    def __call__(self, x):
+        result = self.gaussians[0](x)
         for gauss in self.gaussians[1:]:
-            result += gauss(*x)
+            result += gauss(x)
         return result * self.normalization_constant
 
     def __repr__(self):
@@ -117,13 +124,19 @@ class STO_NG:
     def __str__(self):
         return self.__repr__()
 
+    def on_grid(self, *x):
+        result = self.gaussians[0].on_grid(*x)
+        for gauss in self.gaussians[1:]:
+            result += gauss.on_grid(*x)
+        return result * self.normalization_constant
+
     def find_coeffs_and_exponents(self, gridpoints=300, width=20):
         """Find parameters for coefficients and exponents by fitting to a Slater function"""
         x, y, z = [np.linspace(self.center[i] - width / 2, self.center[i] + width / 2, gridpoints)
                    for i in range(3)]
         dV = reduce(mul, (dim[1] - dim[0] for dim in (x, y, z)))
         slater = Slater(alpha=1.0, center=self.center)
-        y_target = slater(x, y, z)
+        y_target = slater.on_grid(x, y, z)
 
         def difference(params):
             coefficients = params[: params.size // 2]
@@ -131,7 +144,7 @@ class STO_NG:
             logger.debug(f"Coefficients: {coefficients}")
             logger.debug(f"Exponents: {exponents}")
             sto_ng = type(self)(self.center, coefficients=coefficients, exponents=exponents)
-            diff = np.sum((sto_ng(x, y, z) - y_target)**2) * dV
+            diff = np.sum((sto_ng.on_grid(x, y, z) - y_target)**2) * dV
             logger.debug(f"Difference: {diff}")
             return diff
 

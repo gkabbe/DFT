@@ -74,7 +74,7 @@ def test_overlap():
     analytical_result = sto_ng.overlap_integral(gauss1, gauss2)
 
     x = np.linspace(-5, 5, 100)
-    y = (gauss1 * gauss2)(x, x, x)
+    y = (gauss1 * gauss2).on_grid(x, x, x)
     numerical_result = np.sum(y) * (x[1] - x[0])**3
 
     assert analytical_result == approx(numerical_result)
@@ -83,13 +83,13 @@ def test_overlap():
 def test_norm_gaussian():
     gaussian = sto_ng.Gaussian(alpha=0.5, center=[0, 0, 0], normalized=True)
     x = np.linspace(-5, 5, 100)
-    y = gaussian(x, x, x)**2
+    y = gaussian.on_grid(x, x, x)**2
     integral = y.sum() * (x[1] - x[0])**3
 
     assert integral == approx(1)
 
     gaussian = sto_ng.Gaussian(prefactor=0.5, alpha=0.5, center=[0, 0, 0], normalized=True)
-    y = gaussian(x, x, x)**2
+    y = gaussian.on_grid(x, x, x)**2
     integral = y.sum() * (x[1] - x[0])**3
 
     assert integral == approx(0.25)
@@ -98,7 +98,7 @@ def test_norm_gaussian():
 def test_norm_sto():
     sto3g = sto_ng.STO_3G(center=[0, 0, 0])
     x = np.linspace(-10, 10, 200)
-    y = sto3g(x, x, x)**2
+    y = sto3g.on_grid(x, x, x)**2
     integral = y.sum() * (x[1] - x[0])**3
     assert  integral == approx(1, abs=1e-5)
 
@@ -175,30 +175,30 @@ def test_attraction():
 
 
 # These three tests are not suited for unit testing (too long), but results are ok
-#
-# def test_sto_1g():
-#     sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
-#     coeff, expo = sto.find_coeffs_and_exponents()
-#
-#     # Assert equal result as Szabo/Ostlund (p. 157)
-#     assert expo[0] == approx(0.270950), "Result deviates from Szabo/Ostlund's result"
-#
-#
-# def test_sto_2g():
-#     sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1], exponents=[1, 1])
-#     coeff, expo = sto.find_coeffs_and_exponents()
-#
-#     # Assert equal result as Szabo/Ostlund (p. 157)
-#     assert all(coeff == approx([0.678914, 0.430129])), "Result deviates from Szabo/Ostlund's result"
-#     assert all(expo == approx([0.151623, 0.851819])), "Result deviates from Szabo/Ostlund's result"
-#
-#
-# def test_sto_3g():
-#     sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1, 1], exponents=[1, 1, 1])
-#    coeff, expo = sto.find_coeffs_and_exponents()
-#
-#    # Assert equal result as Szabo/Ostlund (p. 157)
-#    assert all(coeff == approx([0.444635, 0.535328, 0.154329])), \
-#        "Result deviates from Szabo/Ostlund's result"
-#    assert all(expo == approx([0.109818, 0.405771, 2.22766])), \
-#        "Result deviates from Szabo/Ostlund's result"
+
+def test_sto_1g():
+    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
+    coeff, expo = sto.find_coeffs_and_exponents()
+
+    # Assert equal result as Szabo/Ostlund (p. 157)
+    assert expo[0] == approx(0.270950), "Result deviates from Szabo/Ostlund's result"
+
+
+def test_sto_2g():
+    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1], exponents=[1, 1])
+    coeff, expo = sto.find_coeffs_and_exponents()
+
+    # Assert equal result as Szabo/Ostlund (p. 157)
+    assert all(coeff == approx([0.678914, 0.430129])), "Result deviates from Szabo/Ostlund's result"
+    assert all(expo == approx([0.151623, 0.851819])), "Result deviates from Szabo/Ostlund's result"
+
+
+def test_sto_3g():
+   sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1, 1], exponents=[1, 1, 1])
+   coeff, expo = sto.find_coeffs_and_exponents()
+
+   # Assert equal result as Szabo/Ostlund (p. 157)
+   assert all(coeff == approx([0.444635, 0.535328, 0.154329])), \
+       "Result deviates from Szabo/Ostlund's result"
+   assert all(expo == approx([0.109818, 0.405771, 2.22766])), \
+       "Result deviates from Szabo/Ostlund's result"
