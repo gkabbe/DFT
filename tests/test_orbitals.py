@@ -176,29 +176,29 @@ def test_attraction():
 
 # These three tests are not suited for unit testing (too long), but results are ok
 
-def test_sto_1g():
-    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
-    coeff, expo = sto.find_coeffs_and_exponents()
-
-    # Assert equal result as Szabo/Ostlund (p. 157)
-    assert expo[0] == approx(0.270950), "Result deviates from Szabo/Ostlund's result"
-
-
-def test_sto_2g():
-    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1], exponents=[1, 1])
-    coeff, expo = sto.find_coeffs_and_exponents()
-
-    # Assert equal result as Szabo/Ostlund (p. 157)
-    assert all(coeff == approx([0.678914, 0.430129])), "Result deviates from Szabo/Ostlund's result"
-    assert all(expo == approx([0.151623, 0.851819])), "Result deviates from Szabo/Ostlund's result"
-
-
-def test_sto_3g():
-   sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1, 1], exponents=[1, 1, 1])
-   coeff, expo = sto.find_coeffs_and_exponents()
-
-   # Assert equal result as Szabo/Ostlund (p. 157)
-   assert all(coeff == approx([0.444635, 0.535328, 0.154329])), \
-       "Result deviates from Szabo/Ostlund's result"
-   assert all(expo == approx([0.109818, 0.405771, 2.22766])), \
-       "Result deviates from Szabo/Ostlund's result"
+#def test_sto_1g():
+#    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1], exponents=[1])
+#    coeff, expo = sto.find_coeffs_and_exponents()
+#
+#    # Assert equal result as Szabo/Ostlund (p. 157)
+#    assert expo[0] == approx(0.270950), "Result deviates from Szabo/Ostlund's result"
+#
+#
+#def test_sto_2g():
+#    sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1], exponents=[1, 1])
+#    coeff, expo = sto.find_coeffs_and_exponents()
+#
+#    # Assert equal result as Szabo/Ostlund (p. 157)
+#    assert all(coeff == approx([0.678914, 0.430129])), "Result deviates from Szabo/Ostlund's result"
+#    assert all(expo == approx([0.151623, 0.851819])), "Result deviates from Szabo/Ostlund's result"
+#
+#
+#def test_sto_3g():
+#   sto = sto_ng.STO_NG([0, 0, 0], coefficients=[1, 1, 1], exponents=[1, 1, 1])
+#   coeff, expo = sto.find_coeffs_and_exponents()
+#
+#   # Assert equal result as Szabo/Ostlund (p. 157)
+#   assert all(coeff == approx([0.444635, 0.535328, 0.154329])), \
+#       "Result deviates from Szabo/Ostlund's result"
+#   assert all(expo == approx([0.109818, 0.405771, 2.22766])), \
+#       "Result deviates from Szabo/Ostlund's result"
