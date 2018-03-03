@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+from abc import ABCMeta, abstractmethod
 import logging
 from functools import reduce
 from operator import mul
@@ -14,15 +13,16 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-class OrbitalFunction:
+class OrbitalFunction(metaclass=ABCMeta):
     def __init__(self, alpha, center, *, prefactor=1, **kwargs):
         self.alpha = alpha
         self.center = np.asfarray(center)
         self.prefactor = prefactor
         self.normalization_constant = None
 
+    @abstractmethod
     def _distance_func(self, dims, center):
-        raise NotImplementedError
+        pass
 
     def __call__(self, x):
         x = np.atleast_2d(x)
