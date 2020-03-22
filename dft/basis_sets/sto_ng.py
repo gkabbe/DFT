@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 class OrbitalFunction(metaclass=ABCMeta):
     def __init__(self, alpha, center, *, prefactor=1.0, **kwargs):
         """
-        Metaclass for all orbital functions.
+        Base class for all orbital functions.
 
 
         Parameters
