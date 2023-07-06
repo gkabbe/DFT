@@ -1,4 +1,4 @@
 numpy==1.13.1
-scipy==0.19.1
+scipy==1.10.0
 multipledispatch==0.4.9
 pytest==3.1.3
